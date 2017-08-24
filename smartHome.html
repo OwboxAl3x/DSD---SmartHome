@@ -1,0 +1,119 @@
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>Smart Home</title>
+        
+        <style type="text/css">
+        
+            #web{
+                text-align: center;
+                margin-top: 200px;
+            }
+            
+            ul li{
+                
+                list-style: none;
+                display: inline;
+                
+            }
+        
+        </style>
+        
+	</head>
+	<body>
+        
+        <h3 id="mensaje_servicio"></h3>
+        <div id="web">
+            <div id="temperatura">
+                <ul>
+                    <li><h4 id="displayTemp"></h4></li>
+                    <li><button id="buttonTemp" onclick="onOffAire()">Encender aire acondicionado</button></li>
+                </ul>
+            </div>
+            <div id="luminosidad">
+                <ul>
+                    <li><h4 id="displayLumi"></h4></li>
+                    <li><button id="buttonLumi" onclick="onOffPersiana()">Abrir persianas</button></li>
+                </ul>
+            </div>
+            <p id="alert" style="color:red;"></p>
+        </div>
+	</body>
+	<script src="/socket.io/socket.io.js"></script>
+	<script type="text/javascript">
+        
+        var serviceURL = document.URL;
+		var socket = io.connect(serviceURL);
+        
+        var d;
+        
+        socket.emit('new', 'Hola Servicio!');
+		
+		socket.on('new', function(data) {
+            
+            document.getElementById('mensaje_servicio').innerHTML = data.bienvenida;
+            document.getElementById('displayTemp').innerHTML = 'Temperatura: '+data.temp+' ºC';
+            document.getElementById('displayLumi').innerHTML = 'Intensidad Luminosa: '+data.lumi+' candela/s';
+            
+		});
+        
+        socket.on('temp', function(data) {
+            document.getElementById('displayTemp').innerHTML = 'Temperatura: '+data+' ºC';
+        });
+        
+        socket.on('persi', function(data) {
+            document.getElementById('displayLumi').innerHTML = 'Intensidad Luminosa: '+data+' candela/s';
+        });
+        
+        socket.on('alert', function(data) {
+            if(data == 'Vaya, que calor! Te cierro la persiana.'){
+                buttonLumi.innerHTML = 'Abrir persianas';
+            }else if(data == 'Parece que estas fuera de casa y te dejaste la persiana abierta. Te cierro la ventana que el vecino es muy cotilla'){
+                buttonLumi.innerHTML = 'Abrir persianas';
+            }else if(data == 'Te vas a morir de calor. Te pongo el A/C'){
+                buttonTemp.innerHTML = 'Apagar aire acondicionado';
+            }
+            document.getElementById('alert').innerHTML = 'Alerta: '+data;
+            
+        });
+        
+        var displayTemp;
+        var displayLumi;
+        var accion;
+        
+        function onOffAire(){
+            
+            d = new Date();
+            
+            displayTemp = document.getElementById('displayTemp');
+            var buttonTemp = document.getElementById('buttonTemp');
+            
+            if(buttonTemp.innerHTML == 'Encender aire acondicionado'){
+                buttonTemp.innerHTML = 'Apagar aire acondicionado';
+                accion = 'Enciende el A/C';
+            }else{
+                buttonTemp.innerHTML = 'Encender aire acondicionado';
+                accion = 'Apaga el A/C';
+            }
+            socket.emit('ac', {accion, d});
+        }
+        
+        function onOffPersiana(){
+            
+            d = new Date();
+            
+            displayLumi = document.getElementById('displayLumi');
+            var buttonLumi = document.getElementById('buttonLumi');
+            
+            if(buttonLumi.innerHTML == 'Abrir persianas'){
+                buttonLumi.innerHTML = 'Cerrar persianas';
+                accion = 'Abre la persiana';
+            }else{
+                buttonLumi.innerHTML = 'Abrir persianas';
+                accion = 'Cierra la persiana';
+            }
+            socket.emit('persiana', {accion, d});
+        }
+        
+	</script>
+</html>

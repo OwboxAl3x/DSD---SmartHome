@@ -1,0 +1,66 @@
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>Smart Home Sensores</title>
+        
+        <style type="text/css">
+        
+            #web{
+                text-align: center;
+                margin-top: 250px;
+            }
+            
+            ul li{
+                
+                list-style: none;
+                display: inline;
+                
+            }
+        
+        </style>
+        
+	</head>
+	<body>
+        <h3 id="mensaje_servicio"></h3>
+        <div id="web">
+            <form action="javascript:void(0);" onsubmit="javascript:enviar();">
+			Temperatura: <input type="label" autocomplete=off id="temp"  /><br />
+			Intensidad Luminosa: <input type="label" autocomplete=off id="lumi" /><br />
+			<input type="submit" value="Modificar" />
+		</form>
+        <span id="resul"></span>
+        </div>
+	</body>
+	<script src="/socket.io/socket.io.js"></script>
+	<script type="text/javascript">
+        
+        var socket = io.connect('http://localhost:8080/');
+        
+        var d;
+        
+        socket.emit('new', 'Hola Servicio!');
+		
+		socket.on('new', function(data) {
+            
+            document.getElementById('mensaje_servicio').innerHTML = data.bienvenida;
+            
+		});
+        
+		function enviar() {
+			var temp = document.getElementById("temp").value;
+            var lumi = document.getElementById("lumi").value;
+            
+            d = new Date();
+            
+            if(temp!="" && lumi!=""){
+                socket.emit('cambiaTempLumi', {temp, lumi, d});
+            }else{
+                if(temp!="") socket.emit('cambiaTemp', {temp, d});
+                if(lumi!="") socket.emit('cambiaLumi', {lumi, d});
+            }
+            
+            document.getElementById('resul').innerHTML = 'Enviado';
+            
+        }
+	</script>
+</html>

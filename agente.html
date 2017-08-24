@@ -1,0 +1,88 @@
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>Smart Home Agente</title>
+        
+        <style type="text/css">
+        
+            #web{
+                text-align: center;
+                margin-top: 200px;
+            }
+        
+        </style>
+        
+	</head>
+	<body>
+        <h3 id="mensaje_servicio"></h3>
+        <p id="alert" style="color:red;"></p>
+	</body>
+	<script src="/socket.io/socket.io.js"></script>
+	<script type="text/javascript">
+        
+		var socket = io.connect('http://localhost:8080/');
+        
+        var d;
+        
+        socket.emit('new', 'Hola Servicio!');
+		
+		socket.on('new', function(data) {
+            
+            document.getElementById('mensaje_servicio').innerHTML = data.bienvenida;
+            
+		});
+        
+        socket.on('cambiaTempLumiAgente', function(data) {
+            if(data.temperatura > 30 && data.persi == true && data.luminosidad > 10){
+                var mensaje = 'Vaya, que calor! Te cierro la persiana.';
+                document.getElementById('alert').innerHTML = 'Alerta: '+data.temperatura+' ºC y '+data.luminosidad+' candela/s';
+                ac = data.ac;
+                persi = false;
+                socket.emit('alert', {mensaje, ac, persi});
+            }
+        });
+        
+        socket.on('cambiaTempAgente', function(data) {
+            
+            if(data.temperatura > 30 && data.ac==false){
+                var mensaje = 'Te vas a morir de calor. Te pongo el A/C';
+                ac = true;
+                persi = data.persi;
+                socket.emit('alert', {mensaje, ac, persi});
+                document.getElementById('alert').innerHTML = 'Alerta: '+data.temperatura+' ºC';
+            }else if(data.temperatura < 18){
+                var mensaje = 'Deberias calentar la casa.';
+                ac = data.ac;
+                persi = data.persi;
+                socket.emit('alert', {mensaje, ac, persi});
+                document.getElementById('alert').innerHTML = 'Alerta: '+data.temperatura+' ºC';
+            }
+            
+        });
+        
+        socket.on('cambiaLumiAgente', function(data) {
+            
+            if(data.luminosidad > 10 && data.persi == true && data.ac == false){
+                var mensaje = 'Parece que estas fuera de casa y te dejaste la persiana abierta. Te cierro la ventana que el vecino es muy cotilla';
+                ac = data.ac;
+                persi = false;
+                socket.emit('alert', {mensaje, ac, persi});
+                document.getElementById('alert').innerHTML = 'Alerta: '+data.luminosidad+' candela/s';
+            }else if(data.luminosidad > 10){
+                var mensaje = 'Tanta luz no es recomendable.';
+                ac = data.ac;
+                persi = data.persi;
+                socket.emit('alert', {mensaje, ac, persi});
+                document.getElementById('alert').innerHTML = 'Alerta: '+data.Luminosidad+' cadela/s';
+            }else if(data.luminosidad < 1){
+                var mensaje = 'Te vas a tropezar.';
+                ac = data.ac;
+                persi = data.persi;
+                socket.emit('alert', {mensaje, ac, persi});
+                document.getElementById('alert').innerHTML = 'Alerta: '+data.luminosidad+' cadela/s';
+            }
+            
+        });
+        
+	</script>
+</html>
